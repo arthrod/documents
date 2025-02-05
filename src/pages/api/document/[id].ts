@@ -246,20 +246,10 @@ async function handleGet(documentId: string, userId: string, res: NextApiRespons
       });
     }
 
-    // Log the document content for debugging
-    console.log('Document content from database:', {
-      documentId,
-      content: document.content,
-      timestamp: new Date().toISOString()
-    });
-
-    // Validate the content structure
-    if (document.content && !validatePlateContent(document.content)) {
-      console.warn('Invalid document content structure:', {
-        documentId,
-        content: document.content,
-        timestamp: new Date().toISOString()
-      });
+    // Ensure position is properly formatted
+    const position = document.position as { x: number; y: number };
+    if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
+      document.position = { x: 0, y: 0 };
     }
 
     // Ensure we're returning the actual content from the document
@@ -268,12 +258,14 @@ async function handleGet(documentId: string, userId: string, res: NextApiRespons
       content: document.content || {
         type: 'doc',
         content: [{ type: 'p', children: [{ text: '' }] }]
-      }
+      },
+      position: position || { x: 0, y: 0 }
     };
 
     console.log('Sending document response:', {
       documentId,
       hasContent: !!response.content,
+      position: response.position,
       timestamp: new Date().toISOString()
     });
 

@@ -37,7 +37,7 @@ const documentInputSchema = z.object({
   position: z.object({
     x: z.number().finite().min(0).max(10000),
     y: z.number().finite().min(0).max(10000)
-  })
+  }).default({ x: 0, y: 0 })
 });
 
 type DocumentInput = z.infer<typeof documentInputSchema>;
@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   icon: validatedInput.icon,
                   coverImage: validatedInput.coverImage,
                   content: validatedInput.content as Prisma.InputJsonValue,
-                  position: validatedInput.position,
+                  position: validatedInput.position as Prisma.InputJsonValue,
                   users: {
                     connect: { id: userId }
                   },

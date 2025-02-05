@@ -26,7 +26,7 @@ const documentInputSchema = z.object({
   position: z.object({
     x: z.number().finite().min(0).max(10000),
     y: z.number().finite().min(0).max(10000)
-  })
+  }).default({ x: 0, y: 0 })
 })
 
 export const documentRouter = createTRPCRouter({
@@ -52,7 +52,7 @@ export const documentRouter = createTRPCRouter({
             icon: input.icon,
             coverImage: input.coverImage,
             content: input.content as Prisma.InputJsonValue,
-            position: input.position,
+            position: input.position as Prisma.InputJsonValue,
             users: {
               connect: { id: ctx.userId },
             },
@@ -63,6 +63,28 @@ export const documentRouter = createTRPCRouter({
               },
             },
           },
+          include: {
+            users: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            versions: {
+              select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                userId: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
+          }
         });
 
         console.log('Document created successfully:', JSON.stringify(newDocument, null, 2));
