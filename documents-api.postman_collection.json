@@ -41,7 +41,8 @@
                   "value": "desc"
                 }
               ]
-            }
+            },
+            "description": "List all documents for the authenticated user.\nReturns:\n- Array of documents with their metadata\n- Each document includes: id, title, icon, coverImage, createdAt, updatedAt"
           }
         },
         {
@@ -61,14 +62,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/documents",
+              "raw": "{{base_url}}/api/document/create",
               "host": ["{{base_url}}"],
-              "path": ["api", "documents"]
+              "path": ["api", "document", "create"]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"New Document\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Hello World\" }]\n      }\n    ]\n  }\n}"
-            }
+              "raw": "{\n  \"title\": \"New Document\",\n  \"icon\": \"🎯\",\n  \"coverImage\": \"linear-gradient(45deg, #ff6b6b, #4ecdc4)\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Hello World\" }]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new document.\n\nEndpoint: POST /api/document/create\n\nFields:\n- title: string (required)\n- icon: string | null (optional)\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null (optional)\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- content: object (required)\n  - Plate.js document structure"
           }
         },
         {
@@ -86,7 +93,60 @@
               "raw": "{{base_url}}/api/documents/{{documentId}}",
               "host": ["{{base_url}}"],
               "path": ["api", "documents", "{{documentId}}"]
-            }
+            },
+            "description": "Get a single document by ID.\nReturns:\n- Document object with all fields including icon and coverImage\n- Associated users\n- Latest version"
+          }
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{documentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{documentId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"icon\": \"🚀\",\n  \"coverImage\": \"#FF5733\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Updated content\" }]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update an existing document.\n\nFields (all optional):\n- title: string\n- icon: string | null\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- content: object (Plate.js document structure)"
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{documentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{documentId}}"]
+            },
+            "description": "Delete a document and all its versions.\nRequires:\n- documentId: The ID of the document to delete\n- Authorization: Bearer token"
           }
         }
       ]
