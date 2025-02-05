@@ -14,7 +14,7 @@ model Document {
   icon      String?
   coverImage String?
   content   Json
-  position  Json     // Stores {x: number, y: number}
+  position  Json      @default("{\"x\":0,\"y\":0}")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   users     User[]
