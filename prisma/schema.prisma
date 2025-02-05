@@ -11,6 +11,8 @@ datasource db {
 model Document {
   id        String    @id @default(cuid())
   title     String
+  icon      String?
+  coverImage String?
   content   Json
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

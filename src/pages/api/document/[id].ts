@@ -46,7 +46,24 @@ const plateDocumentSchema: z.ZodType<PlateDocument> = z.object({
 
 const updateDocumentSchema = z.object({
   title: z.string().optional(),
-  content: plateDocumentSchema.optional(),
+  icon: z.union([
+    z.string().refine(
+      (str) => {
+        const emojiRegex = /^(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|\ud83c[\ude32-\ude3a]|\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])$/;
+        return emojiRegex.test(str);
+      },
+      'Must be a single emoji character'
+    ),
+    z.string().url('Must be a valid URL'),
+    z.null()
+  ]).nullable().optional(),
+  coverImage: z.union([
+    z.string().regex(/^linear-gradient\(.*\)$/, 'Must be a valid CSS gradient'),
+    z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color'),
+    z.string().url('Must be a valid URL'),
+    z.null()
+  ]).nullable().optional(),
+  content: plateDocumentSchema.optional()
 });
 
 // Validation helper
@@ -279,116 +296,47 @@ async function handleUpdate(
   res: NextApiResponse
 ) {
   try {
-    console.log('Update request received:', {
-      documentId,
-      userId,
-      body,
-      timestamp: new Date().toISOString()
-    });
-
     // Validate input
     const validatedInput = updateDocumentSchema.parse(body);
 
-    // Additional content validation if present
-    if (validatedInput.content && !validatePlateContent(validatedInput.content)) {
-      return res.status(400).json({ error: 'Invalid content structure' });
-    }
-
-    // Check if document exists first
-    const documentExists = await db.document.findUnique({
-      where: {
-        id: documentId
-      }
-    });
-
-    console.log('Document existence check:', {
-      documentId,
-      exists: !!documentExists,
-      timestamp: new Date().toISOString()
-    });
-
-    if (!documentExists) {
-      return res.status(404).json({
-        error: 'Document not found',
-        code: 'DOCUMENT_NOT_FOUND',
-        message: 'The requested document does not exist'
-      });
-    }
-
-    // Then check user access
-    const userAccess = await db.document.findFirst({
+    // Check if user has access to the document
+    const existingDocument = await db.document.findFirst({
       where: {
         id: documentId,
         users: {
           some: {
-            id: userId,
-          },
-        },
-      },
-      include: {
-        users: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    console.log('User access check:', {
-      documentId,
-      userId,
-      hasAccess: !!userAccess,
-      timestamp: new Date().toISOString()
-    });
-
-    if (!userAccess) {
-      return res.status(403).json({
-        error: 'Access denied',
-        code: 'ACCESS_DENIED',
-        message: 'You do not have permission to modify this document'
-      });
-    }
-
-    // Create new version if content is updated
-    const updateData: Prisma.DocumentUpdateInput = {
-      ...(validatedInput.title && { title: validatedInput.title }),
-      users: {
-        connect: userAccess.users.map(user => ({ id: user.id }))
+            id: userId
+          }
+        }
       }
-    };
+    });
 
-    if (validatedInput.content) {
-      console.log('Content update validation:', {
-        documentId,
-        content: validatedInput.content,
-        timestamp: new Date().toISOString()
-      });
-
-      // Ensure content structure is preserved exactly as received
-      const contentJson = JSON.parse(JSON.stringify(validatedInput.content)) as Prisma.InputJsonValue;
-      updateData.content = contentJson;
-      updateData.versions = {
-        create: {
-          content: contentJson,
-          user: { connect: { id: userId } },
-        },
-      };
-
-      console.log('Content after processing:', {
-        documentId,
-        content: updateData.content,
-        timestamp: new Date().toISOString()
+    if (!existingDocument) {
+      return res.status(404).json({
+        error: 'Document not found',
+        code: 'DOCUMENT_NOT_FOUND',
+        message: 'Document not found or you do not have permission to update it'
       });
     }
 
-    console.log('Updating document:', {
-      documentId,
-      userId,
-      updateData,
-      timestamp: new Date().toISOString()
-    });
+    // Prepare update data
+    const updateData: any = {};
+    if (validatedInput.title !== undefined) updateData.title = validatedInput.title;
+    if (validatedInput.icon !== undefined) updateData.icon = validatedInput.icon;
+    if (validatedInput.coverImage !== undefined) updateData.coverImage = validatedInput.coverImage;
+    if (validatedInput.content !== undefined) {
+      updateData.content = validatedInput.content as unknown as Prisma.InputJsonValue;
+      // Create a new version when content changes
+      await db.version.create({
+        data: {
+          content: validatedInput.content as unknown as Prisma.InputJsonValue,
+          documentId: documentId,
+          userId: userId
+        }
+      });
+    }
 
+    // Update the document
     const updatedDocument = await db.document.update({
       where: { id: documentId },
       data: updateData,
@@ -396,57 +344,46 @@ async function handleUpdate(
         users: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
         versions: {
           orderBy: {
-            createdAt: 'desc',
+            createdAt: 'desc'
           },
           take: 1,
           select: {
             id: true,
             content: true,
             createdAt: true,
-          },
-        },
-      },
-    });
-
-    console.log('Document updated successfully:', {
-      documentId,
-      userId,
-      timestamp: new Date().toISOString()
+            userId: true,
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
     });
 
     return res.status(200).json(updatedDocument);
   } catch (error) {
-    console.error('Error updating document:', {
-      documentId,
-      userId,
-      error: error instanceof Error ? {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      } : 'Unknown error',
-      timestamp: new Date().toISOString()
-    });
-
+    console.error('Error updating document:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid request data',
-        code: 'INVALID_REQUEST_DATA',
+      return res.status(400).json({
+        error: 'Invalid input',
+        code: 'INVALID_INPUT',
+        message: 'The provided input is invalid',
         details: error.errors
       });
     }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return res.status(404).json({ error: 'Document not found' });
-      }
-    }
-
-    return res.status(500).json({ error: 'Failed to update document' });
+    return res.status(500).json({
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred while updating the document'
+    });
   }
 }
 
