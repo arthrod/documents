@@ -63,7 +63,11 @@ const updateDocumentSchema = z.object({
     z.string().url('Must be a valid URL'),
     z.null()
   ]).nullable().optional(),
-  content: plateDocumentSchema.optional()
+  content: plateDocumentSchema.optional(),
+  position: z.object({
+    x: z.number().finite().min(0).max(10000),
+    y: z.number().finite().min(0).max(10000)
+  }).optional()
 });
 
 // Validation helper
@@ -324,6 +328,7 @@ async function handleUpdate(
     if (validatedInput.title !== undefined) updateData.title = validatedInput.title;
     if (validatedInput.icon !== undefined) updateData.icon = validatedInput.icon;
     if (validatedInput.coverImage !== undefined) updateData.coverImage = validatedInput.coverImage;
+    if (validatedInput.position !== undefined) updateData.position = validatedInput.position;
     if (validatedInput.content !== undefined) {
       updateData.content = validatedInput.content as unknown as Prisma.InputJsonValue;
       // Create a new version when content changes

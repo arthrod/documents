@@ -68,14 +68,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"New Document\",\n  \"icon\": \"🎯\",\n  \"coverImage\": \"linear-gradient(45deg, #ff6b6b, #4ecdc4)\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Hello World\" }]\n      }\n    ]\n  }\n}",
+              "raw": "{\n  \"title\": \"New Document\",\n  \"icon\": \"🎯\",\n  \"coverImage\": \"linear-gradient(45deg, #ff6b6b, #4ecdc4)\",\n  \"position\": {\n    \"x\": 0,\n    \"y\": 0\n  },\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Hello World\" }]\n      }\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Create a new document.\n\nEndpoint: POST /api/document/create\n\nFields:\n- title: string (required)\n- icon: string | null (optional)\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null (optional)\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- content: object (required)\n  - Plate.js document structure"
+            "description": "Create a new document.\n\nEndpoint: POST /api/document/create\n\nFields:\n- title: string (required)\n- icon: string | null (optional)\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null (optional)\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- position: object (required)\n  - x: number (0 to 10000)\n  - y: number (0 to 10000)\n- content: object (required)\n  - Plate.js document structure"
           }
         },
         {
@@ -120,14 +120,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Title\",\n  \"icon\": \"🚀\",\n  \"coverImage\": \"#FF5733\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Updated content\" }]\n      }\n    ]\n  }\n}",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"icon\": \"🚀\",\n  \"coverImage\": \"#FF5733\",\n  \"position\": {\n    \"x\": 100,\n    \"y\": 200\n  },\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"paragraph\",\n        \"children\": [{ \"text\": \"Updated content\" }]\n      }\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Update an existing document.\n\nFields (all optional):\n- title: string\n- icon: string | null\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- content: object (Plate.js document structure)"
+            "description": "Update an existing document.\n\nFields (all optional):\n- title: string\n- icon: string | null\n  - Single emoji character\n  - Valid image URL\n  - null to remove icon\n- coverImage: string | null\n  - CSS gradient (e.g., 'linear-gradient(45deg, #ff6b6b, #4ecdc4)')\n  - Hex color code (e.g., '#FF5733')\n  - Valid image URL\n  - null to remove cover\n- position: object\n  - x: number (0 to 10000)\n  - y: number (0 to 10000)\n- content: object (Plate.js document structure)"
           }
         },
         {

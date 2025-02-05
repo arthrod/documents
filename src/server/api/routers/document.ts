@@ -22,7 +22,11 @@ const documentInputSchema = z.object({
     z.string().url('Must be a valid URL'),
     z.null()
   ]).nullable().optional(),
-  content: z.any()
+  content: z.any(),
+  position: z.object({
+    x: z.number().finite().min(0).max(10000),
+    y: z.number().finite().min(0).max(10000)
+  })
 })
 
 export const documentRouter = createTRPCRouter({
@@ -45,7 +49,10 @@ export const documentRouter = createTRPCRouter({
         const newDocument = await ctx.prisma.document.create({
           data: {
             title: input.title,
+            icon: input.icon,
+            coverImage: input.coverImage,
             content: input.content as Prisma.InputJsonValue,
+            position: input.position,
             users: {
               connect: { id: ctx.userId },
             },
