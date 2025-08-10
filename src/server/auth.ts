@@ -43,7 +43,7 @@ export async function validateToken(token: string): Promise<AuthResponse> {
     console.log('Auth Service Response:', {
       status: response.status,
       body: responseData,
-      headers: Object.fromEntries(response.headers.entries()),
+      headers: Object.fromEntries(response.headers as any),
       timestamp: new Date().toISOString()
     });
 
